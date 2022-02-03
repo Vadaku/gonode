@@ -5,19 +5,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"gonode/database"
+	"gonode/result"
 	"strconv"
 	"time"
-)
 
-type Results struct {
-	Datahash  string `json:"Datahash"`
-	Nonce     string `json:"Nonce"`
-	Rotation  string `json:"Rotation"`
-	Source    string `json:"Source"`
-	Target    string `json:"Target"`
-	Timestamp string `json:"Timestamp"`
-	User      string `json:"User"`
-}
+	"google.golang.org/protobuf/proto"
+)
 
 func MinerFork(source string, data string, target string) {
 	nonce := 1
@@ -43,7 +36,7 @@ func MinerFork(source string, data string, target string) {
 		rotationHash = sha256.Sum256([]byte(rotation))
 		rotationHashed = hex.EncodeToString(rotationHash[:])
 	}
-	res := &Results{
+	res := &result.Result{
 		Datahash:  hashedData,
 		Nonce:     strconv.Itoa(nonce),
 		Rotation:  rotationHashed,
@@ -52,7 +45,15 @@ func MinerFork(source string, data string, target string) {
 		Timestamp: time.Now().String(),
 		User:      "Anonynmous",
 	}
-	database.AddToDB(res)
+
+	output, err := proto.Marshal(res)
+	if err != nil {
+		panic(err)
+	}
+	//Add mining result to DB.
+	database.DBAddResult(rotationHashed, output)
+	//Add datahash as "key" and data as "value" to DB.
+	database.DBAddData(hashedData, data)
 }
 
 func MinerRotate(source string, data string, target string) {

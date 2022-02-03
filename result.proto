@@ -1,0 +1,19 @@
+syntax = "proto3";
+package result;
+
+option go_package = "/result";
+
+message Result {
+  string datahash = 1;
+  string nonce = 2;
+  string rotation = 3;
+  string source = 4; 
+  string target = 5;
+  string timestamp = 6;
+  string user = 7;
+}
+
+message Results {
+  
+
+}

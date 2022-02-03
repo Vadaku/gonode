@@ -10,6 +10,9 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Expected GET Request", http.StatusNotFound)
 	} else {
-		database.LookupInDB(datahash)
+		w.WriteHeader(http.StatusOK)
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		response := database.DBDataLookup(datahash)
+		w.Write(response)
 	}
 }
