@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"gonode/functions"
 	"net/http"
 )
@@ -14,6 +15,7 @@ func RecieveMine(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Expected POST request", http.StatusNotFound)
 	} else {
+		fmt.Printf("Recieved mining request from %s\n", r.RemoteAddr)
 		r.ParseForm()
 		source := r.Form["source"][0]
 		data := r.Form["data"][0]

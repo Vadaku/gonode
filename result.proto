@@ -3,7 +3,7 @@ package result;
 
 option go_package = "/result";
 
-message Result {
+message MineResult {
   string datahash = 1;
   string nonce = 2;
   string rotation = 3;
@@ -14,6 +14,5 @@ message Result {
 }
 
 message Results {
-  
-
+  repeated MineResult res = 1;
 }
