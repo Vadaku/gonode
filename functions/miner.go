@@ -46,7 +46,7 @@ func MinerFork(source string, data string, target string) {
 	database.DBAddResult(source, mineFormat)
 	//Add mining result to DB.
 	//Add datahash as "key" and data as "value" to DB.
-	//database.DBAddData(hashedData, data)
+	database.DBAddData(hashedData, data)
 }
 
 func MinerRotate(source string, data string, target string) {

@@ -14,5 +14,5 @@ message MineResult {
 }
 
 message Results {
-  repeated MineResult res = 1;
+  repeated MineResult Res = 1;
 }

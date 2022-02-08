@@ -14,24 +14,21 @@ func DBAddResult(source string, form *result.MineResult) {
 	if err != nil {
 		panic(err)
 	}
-	x := make(chan []byte)
-	spv, notIn := DBIndexLookup(source, *db, x)
+	spv, notIn := DBIndexLookup(source, *db)
 	mineResult := &result.Results{
 		Res: []*result.MineResult{},
 	}
 	if !notIn {
-		fmt.Println("Result not in the index")
 		mineResult = &result.Results{
 			Res: []*result.MineResult{form},
 		}
 		res, _ := proto.Marshal(mineResult)
+		fmt.Printf("Adding %s result to database.\n", source)
 		db.Put([]byte(source), res, nil)
 	} else {
 		proto.Unmarshal(spv, mineResult)
 		spvSlice := mineResult.GetRes()
-		fmt.Println(spvSlice[7].Rotation)
 		for _, entries := range spvSlice {
-			// fmt.Println(entries.Rotation)
 			if entries.Rotation == form.Rotation {
 				fmt.Println("Entry with this rotation already in DB")
 				break
@@ -44,12 +41,13 @@ func DBAddResult(source string, form *result.MineResult) {
 					Res: spvSlice,
 				}
 				h, _ := proto.Marshal(mineResult)
+				fmt.Printf("Adding %s result to database.\n", source)
 				db.Put([]byte(source), h, nil)
 			}
 		}
 	}
-	fmt.Printf("Adding %s result to database.\n", source)
-	// db.Put([]byte(source), form, nil)
+
+	// db.Put([]byte(source), form, nil
 
 	db.Close()
 }
@@ -65,21 +63,20 @@ func DBAddData(datahash string, data string) {
 }
 
 func DBDataLookup(datahash string) []byte {
-	DBListData()
 	db, err := leveldb.OpenFile("../.history/data", nil)
 	if err != nil {
 		panic(err)
 	}
 	data, err := db.Get([]byte(datahash), nil)
 	if err != nil {
-		panic(err)
+		fmt.Printf("Not in database")
 	}
 	fmt.Printf("Data being sent to client\n")
 	db.Close()
 	return data
 }
 
-func DBIndexLookup(root string, db leveldb.DB, x chan []byte) ([]byte, bool) {
+func DBIndexLookup(root string, db leveldb.DB) ([]byte, bool) {
 	//db, err := leveldb.OpenFile("../.history/index", nil)
 	inDb := true
 	data, err := db.Get([]byte(root), nil)
@@ -88,7 +85,10 @@ func DBIndexLookup(root string, db leveldb.DB, x chan []byte) ([]byte, bool) {
 		inDb = false
 		fmt.Println("Not a key in the index")
 	}
-	// x <- data
+	values := &result.Results{
+		Res: []*result.MineResult{},
+	}
+	proto.Unmarshal(data, values)
 	//db.Close()
 	return data, inDb
 }
