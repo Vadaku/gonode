@@ -24,7 +24,7 @@ func SpotifyLogin(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "GET" {
 		http.Error(w, "Expected GET request", http.StatusNotFound)
 	} else {
-		authScopes := "user-modify-playback-state user-read-playback-state user-read-currently-playing user-read-private user-read-email"
+		authScopes := "user-modify-playback-state user-read-playback-state user-read-currently-playing user-read-recently-played user-read-private user-read-email streaming"
 		query := r.URL.Query()
 		query.Add("response_type", "code")
 		query.Add("client_id", spotify_client_id)
