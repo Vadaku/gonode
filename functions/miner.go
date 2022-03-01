@@ -43,6 +43,7 @@ func MinerFork(source string, data string, target string) {
 		Timestamp: "test",
 		User:      "Anonymous",
 	}
+
 	database.DBAddResult(source, mineFormat)
 	//Add mining result to DB.
 	//Add datahash as "key" and data as "value" to DB.
