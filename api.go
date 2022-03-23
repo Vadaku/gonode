@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net/http"
+	"path"
 	"strconv"
 	"time"
 )
@@ -19,7 +20,7 @@ type MineResult struct {
 //Mining function to handle mine endpoint.
 //Processes clients mine request then returns mine result as response.
 func mine(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("Recieved mine request from ", r.RemoteAddr)
+	fmt.Println("Recieved mine request from", r.RemoteAddr)
 	//Assign request queries and random nonce to relevant variables.
 	r.ParseForm()
 	source := r.FormValue("source")
@@ -32,6 +33,11 @@ func mine(w http.ResponseWriter, r *http.Request) {
 		sourceChecksum := sha256.Sum256([]byte(source))
 		source = hex.EncodeToString(sourceChecksum[:])
 	}
+	//Hash the data if it hasn't been hashed already. --> Passed datahash because of hashwall?
+	if len(data) != 64 {
+		dataChecksum := sha256.Sum256([]byte(data))
+		data = hex.EncodeToString(dataChecksum[:])
+	}
 	//Hash data variable.
 	dataChecksum := sha256.Sum256([]byte(data))
 	dataHash := hex.EncodeToString(dataChecksum[:])
@@ -43,7 +49,7 @@ func mine(w http.ResponseWriter, r *http.Request) {
 	//If the prefix matches then execute the loop and return result.
 	for {
 		if rotationHash[0:len(target)] == target {
-			fmt.Printf("Target matched with rotation %s and nonce %s\n", rotationHash, strconv.Itoa(nonce))
+			fmt.Printf("\033[32mTarget matched with rotation %s and nonce %s\033[0m\n", rotationHash, strconv.Itoa(nonce))
 			break
 		}
 		nonce++
@@ -59,12 +65,19 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 
 }
 
-//Mine a rotation to unlock data given the datahash
+//Mine a rotation to unlock data given the datahash.
+//Expects source, datahash, target and rotation as inputs.
 func hashwall(w http.ResponseWriter, r *http.Request) {
-
+	r.ParseForm()
+	source := r.FormValue("source")
+	datahash := r.FormValue("datahash")
+	target := r.FormValue("target")
 }
 
 //Return data to the client
 func getData(w http.ResponseWriter, r *http.Request) {
-
+	dataHash := path.Base(r.URL.Path)
+	fmt.Printf("Recieved data request for %s\n", dataHash)
+	result := DBGetData(dataHash)
+	w.Write([]byte(result))
 }

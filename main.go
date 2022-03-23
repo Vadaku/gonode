@@ -13,9 +13,9 @@ func main() {
 
 	r.HandleFunc("/api/v2/mine", mine).Methods("POST")
 	r.HandleFunc("/api/v2/hashwall", hashwall).Methods("PUT")
-	r.HandleFunc("/api/v2/data", getData).Methods("GET")
-	r.HandleFunc("/api/v2/index", getIndex).Methods("GET")
+	r.HandleFunc("/api/v2/data/{dataHash}", getData).Methods("GET")
+	r.HandleFunc("/api/v2/index/{sourceHash}", getIndex).Methods("GET")
 
-	fmt.Println("Running server on port 3222.")
+	fmt.Println("Running node on port 3222.")
 	http.ListenAndServe(":3222", r)
 }
