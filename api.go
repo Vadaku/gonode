@@ -69,9 +69,9 @@ func getIndex(w http.ResponseWriter, r *http.Request) {
 //Expects source, datahash, target and rotation as inputs.
 func hashwall(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
-	source := r.FormValue("source")
-	datahash := r.FormValue("datahash")
-	target := r.FormValue("target")
+	// source := r.FormValue("source")
+	// datahash := r.FormValue("datahash")
+	// target := r.FormValue("target")
 }
 
 //Return data to the client
