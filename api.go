@@ -15,6 +15,8 @@ type MineResult struct {
 	source   string
 	datahash string
 	target   string
+	rotation string
+	nonce    string
 }
 
 //Mining function to handle mine endpoint.
@@ -44,9 +46,7 @@ func mine(w http.ResponseWriter, r *http.Request) {
 	//Hash combined "rotation" string.
 	rotationChecksum := sha256.Sum256([]byte(source + dataHash + strconv.Itoa(nonce)))
 	rotationHash := hex.EncodeToString(rotationChecksum[:])
-	//Continually check to see if the rotationHash prefix matches the target.
-	//If not, increment the nonce by 1 then hash the new rotation string and continue.
-	//If the prefix matches then execute the loop and return result.
+	//Continually mine to see if the rotationHash prefix matches the target.
 	for {
 		if rotationHash[0:len(target)] == target {
 			fmt.Printf("\033[32mTarget matched with rotation %s and nonce %s\033[0m\n", rotationHash, strconv.Itoa(nonce))
@@ -56,6 +56,16 @@ func mine(w http.ResponseWriter, r *http.Request) {
 		rotationChecksum = sha256.Sum256([]byte(source + dataHash + strconv.Itoa(nonce)))
 		rotationHash = hex.EncodeToString(rotationChecksum[:])
 	}
+
+	//Format result as MineResult struct.
+	_ = &MineResult{
+		source:   source,
+		datahash: dataHash,
+		target:   target,
+		rotation: rotationHash,
+		nonce:    strconv.Itoa(nonce),
+	}
+
 	//Add data to leveldb.
 	AddToData(dataHash, data)
 }
