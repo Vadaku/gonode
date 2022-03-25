@@ -1,5 +1,7 @@
 package main
 
+import "fmt"
+
 //Each non leaf node has a pointer to another node.
 //On insertion of a prefix or if prefix exists already, store the rotation in to rotationArr.
 
@@ -51,6 +53,7 @@ func (t *Trie) insertToTrie(w string, rotation string) {
 //Returns two values, result slice and bool if the Trie contains the prefix.
 //Returns nil result if prefix is not in the trie.
 func (t *Trie) searchTrie(key string) ([]string, bool) {
+	fmt.Println(key)
 	currentNode := t.rootNode
 	keySlice := []byte(key)
 	for i := 0; i < len(keySlice); i++ {

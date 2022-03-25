@@ -14,10 +14,31 @@ func AddToData(dataHash string, data string) {
 	defer db.Close()
 }
 
-func AddToIndex(result string) {
+func AddToIndex(source string, result string) {
 	db, _ := leveldb.OpenFile("../.history/index", nil)
 
+	indexResult, inDb := db.Get([]byte(source), nil)
+	if inDb == nil {
+		result += string(indexResult)
+	}
+
+	fmt.Println("Incoming result", result)
+
+	db.Put([]byte(source), []byte(result), nil)
+
 	defer db.Close()
+}
+
+func DBGetIndex(key string) (string, bool) {
+	inDb := true
+	db, _ := leveldb.OpenFile("../.history/index", nil)
+	res, _ := db.Get([]byte(key), nil)
+	// if ok != nil {
+	// 	inDb = false
+	// }
+
+	defer db.Close()
+	return string(res), inDb
 }
 
 func DBGetData(dataHash string) string {
@@ -28,5 +49,7 @@ func DBGetData(dataHash string) string {
 	if err != nil {
 		fmt.Printf("Database does not contain key %s\n", dataHash)
 	}
+
+	defer db.Close()
 	return string(data)
 }

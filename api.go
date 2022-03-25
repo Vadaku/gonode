@@ -68,10 +68,13 @@ func mine(w http.ResponseWriter, r *http.Request) {
 
 	//Add data to leveldb.
 	AddToData(dataHash, data)
+	AddToIndex(source, rotationHash)
 }
 
 //Return index data to client
 func getIndex(w http.ResponseWriter, r *http.Request) {
+	source := path.Base(r.URL.Path)
+	fmt.Println(DBGetIndex(source))
 
 }
 
@@ -89,5 +92,12 @@ func getData(w http.ResponseWriter, r *http.Request) {
 	dataHash := path.Base(r.URL.Path)
 	fmt.Printf("Recieved data request for %s\n", dataHash)
 	result := DBGetData(dataHash)
-	w.Write([]byte(result))
+	fmt.Fprint(w, result)
+}
+
+//Trie lookup using a target then return rotations associated with the target.
+func triePrefixLookup(w http.ResponseWriter, r *http.Request) {
+	target := path.Base(r.URL.Path)
+	result, _ := test.searchTrie(target)
+	fmt.Println(result)
 }
