@@ -1,15 +1,10 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"net/http"
 	"path"
-	"strconv"
-	"time"
 )
 
 type MineResult struct {
@@ -36,56 +31,6 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(Mine(source, data, target))
 	}
 
-}
-
-func Mine(source string, data string, target string) *MineResult {
-	var beforeHashData string
-	//Assign request queries and random nonce to relevant variables.
-	rand.Seed(time.Now().UnixNano())
-	nonce := rand.Int()
-	//Hash the source if it hasn't been hashed already.
-	if len(source) != 64 {
-		sourceChecksum := sha256.Sum256([]byte(source))
-		source = hex.EncodeToString(sourceChecksum[:])
-	}
-	//Hash the data if it hasn't been hashed already. --> Passed datahash because of hashwall?
-	if len(data) != 64 {
-		beforeHashData = data
-		dataChecksum := sha256.Sum256([]byte(data))
-		data = hex.EncodeToString(dataChecksum[:])
-	}
-	//Hash combined "rotation" string.
-	rotationChecksum := sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
-	rotationHash := hex.EncodeToString(rotationChecksum[:])
-	//Continually mine to see if the rotationHash prefix matches the target.
-	for {
-		if rotationHash[0:len(target)] == target {
-			fmt.Printf("\033[32mTarget matched with rotation %s and nonce %s\033[0m\n", rotationHash, strconv.Itoa(nonce))
-			break
-		}
-		nonce++
-		rotationChecksum = sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
-		rotationHash = hex.EncodeToString(rotationChecksum[:])
-	}
-
-	timestamp := time.Now().Unix()
-	//Format result as MineResult struct.
-	res := &MineResult{
-		Source:    source,
-		Datahash:  data,
-		Target:    target,
-		Rotation:  rotationHash,
-		Nonce:     strconv.Itoa(nonce),
-		Timestamp: timestamp,
-	}
-	rawString := source + data + target + rotationHash + strconv.Itoa(nonce)
-
-	//Add data to leveldb.
-
-	AddToData(data, beforeHashData)
-	AddToIndex(source, rotationHash, rawString)
-
-	return res
 }
 
 //Return index data to client
@@ -120,6 +65,16 @@ func Hashwall(w http.ResponseWriter, r *http.Request) {
 func GetData(w http.ResponseWriter, r *http.Request) {
 	dataHash := path.Base(r.URL.Path)
 	fmt.Printf("Recieved data request for %s\n", dataHash)
+	header := r.Header.Get("Content-Type")
+	if header != "" {
+		if header != "application/octet-stream" && header != "text/plain" {
+			http.Error(w, "Expected application/octect or text/plain", http.StatusUnsupportedMediaType)
+		} else if header == "text/plain" {
+
+		} else if header == "application/octet-stream" {
+			BinaryData()
+		}
+	}
 	result := DBGetData(dataHash)
 	w.Write([]byte(result))
 }
