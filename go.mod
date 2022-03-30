@@ -1,9 +1,11 @@
-module github.com/Vadaku/golangnode
+module golangnode
 
 go 1.17
 
 require (
-	github.com/gorilla/mux v1.8.0 // indirect
+	github.com/go-gl/glfw v0.0.0-20220320163800-277f93cfa958
+	github.com/gorilla/mux v1.8.0
+	github.com/inkyblackness/imgui-go/v4 v4.4.0
 	github.com/syndtr/goleveldb v1.0.0
 )
 

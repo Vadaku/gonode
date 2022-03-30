@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
+	util "golangnode/imgui"
+
 	"github.com/gorilla/mux"
 )
 
@@ -11,7 +13,9 @@ var test *Trie
 
 //Setup routes and handlers then serve on port 8080.
 func main() {
-	//Testing Trie.
+	//Init Imgui.
+	util.InitImgui()
+	//Init and test Trie.
 	test = initializeTrie()
 	test.insertToTrie("21e8", "21e893411ac5c7f3896fe57fb7d8a8f150ee18a7256fe73990a17c47a498c8b5")
 	test.insertToTrie("21e8", "testrotation")
@@ -24,11 +28,12 @@ func main() {
 
 	r := mux.NewRouter()
 
-	r.HandleFunc("/api/v2/mine", mine).Methods("POST")
-	r.HandleFunc("/api/v2/hashwall", hashwall).Methods("PUT")
-	r.HandleFunc("/api/v2/data/{dataHash}", getData).Methods("GET")
-	r.HandleFunc("/api/v2/index/{sourceHash}", getIndex).Methods("GET")
-	r.HandleFunc("/api/v2/trie/{target}", triePrefixLookup).Methods("GET")
+	r.HandleFunc("/api/v2/mine", MineReq).Methods("POST")
+	r.HandleFunc("/api/v2/hashwall", Hashwall).Methods("PUT")
+	r.HandleFunc("/api/v2/data/{dataHash}", GetData).Methods("GET")
+	r.HandleFunc("/api/v2/index/{sourceHash}", GetIndex).Methods("GET")
+	r.HandleFunc("/api/v2/trie/{target}", TriePrefixLookup).Methods("GET")
+	r.HandleFunc("/api/v2/raw/{rotation}", GetRaw).Methods("GET")
 
 	fmt.Println("Running node on port 3222.")
 	http.ListenAndServe(":3222", r)

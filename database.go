@@ -9,24 +9,30 @@ import (
 func AddToData(dataHash string, data string) {
 	db, _ := leveldb.OpenFile("../.history/data", nil)
 
-	db.Put([]byte(dataHash), []byte(data), nil)
+	if data != "" {
+		if ok, _ := db.Has([]byte(dataHash), nil); !ok {
+			db.Put([]byte(dataHash), []byte(data), nil)
+		}
+	}
 
 	defer db.Close()
 }
 
-func AddToIndex(source string, result string) {
+func AddToIndex(source string, result string, raw string) {
 	db, _ := leveldb.OpenFile("../.history/index", nil)
-
+	rotation := result
 	indexResult, inDb := db.Get([]byte(source), nil)
 	if inDb == nil {
 		result += string(indexResult)
 	}
-
-	fmt.Println("Incoming result", result)
-
 	db.Put([]byte(source), []byte(result), nil)
+	db.Put([]byte(rotation), []byte(raw), nil)
 
+	AddRaw(result, raw, db)
 	defer db.Close()
+}
+
+func AddRaw(rotation string, rawstring string, db *leveldb.DB) {
 }
 
 func DBGetIndex(key string) (string, bool) {
