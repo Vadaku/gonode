@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"path"
+	"strings"
 )
 
 type MineResult struct {
@@ -28,7 +29,7 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing a required parameter.\nPlease ensure request includes source, data and target.", http.StatusBadRequest)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Mine(source, data, target))
+		json.NewEncoder(w).Encode(Mine(source, data, target, nil))
 	}
 
 }
@@ -44,6 +45,7 @@ func GetIndex(w http.ResponseWriter, r *http.Request) {
 //Mine a rotation to unlock data given the datahash.
 //Expects mine result as inputs.
 func Hashwall(w http.ResponseWriter, r *http.Request) {
+	// ws, _ := upgrader.Upgrade(w, r, nil)
 	var reqBody MineResult
 	header := r.Header.Get("Content-Type")
 	if header != "" {
@@ -54,7 +56,7 @@ func Hashwall(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
-				Mine(reqBody.Source, reqBody.Datahash, reqBody.Target)
+				Mine(reqBody.Source, reqBody.Datahash, reqBody.Target, nil)
 				http.Redirect(w, r, "/api/v2/data/"+reqBody.Datahash, http.StatusMovedPermanently)
 			}
 		}
@@ -91,4 +93,5 @@ func TriePrefixLookup(w http.ResponseWriter, r *http.Request) {
 	target := path.Base(r.URL.Path)
 	result, _ := test.searchTrie(target)
 	fmt.Println(result)
+	w.Write([]byte(strings.Join(result, "\n")))
 }

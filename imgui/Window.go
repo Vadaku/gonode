@@ -164,6 +164,10 @@ func ShowHashwall(keepOpen *bool) {
 		return
 	}
 
+	if imgui.Button("Mine To Unlock") {
+		fmt.Println("Button Pressed")
+	}
+
 	// End of ShowDemoWindow()
 	imgui.End()
 }
