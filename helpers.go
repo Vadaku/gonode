@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"math"
 	"math/rand"
 	"strconv"
 	"time"
@@ -54,8 +55,13 @@ func Mine(source string, data string, target string, conn *websocket.Conn) *Mine
 		Rotation:  rotationHash,
 		Nonce:     strconv.Itoa(nonce),
 		Timestamp: timestamp,
+		Weight:    int64(math.Pow(16, float64(len(target)))),
 	}
-	rawString := source + data + target + rotationHash + strconv.Itoa(nonce)
+	fmt.Println(timestamp)
+	weight := strconv.FormatInt(int64(math.Pow(16, float64(len(target)))), 10)
+	//Hardcoded 'user' hash.
+	myNameHash := "00e51906df651a7ee922446590f487cff433ec9816aedc44dc49952a05cd16df"
+	rawString := strconv.FormatInt(timestamp, 10) + weight + source + data + target + myNameHash + strconv.Itoa(nonce)
 
 	//Add data to leveldb.
 

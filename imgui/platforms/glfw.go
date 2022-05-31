@@ -1,6 +1,3 @@
-//go:build glfw
-// +build glfw
-
 package platforms
 
 import (

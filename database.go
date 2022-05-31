@@ -1,10 +1,32 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"log"
+	"os"
 
 	"github.com/syndtr/goleveldb/leveldb"
 )
+
+func AddToTrie() {
+	test = initializeTrie()
+
+	f, err := os.Open("../.history/index/")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	files, err := f.Readdir(0)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	for _, v := range files {
+		test.insertToTrie("21e8", v.Name()[0:64])
+	}
+}
 
 func AddToData(dataHash string, data string) {
 	db, _ := leveldb.OpenFile("../.history/data", nil)
@@ -19,32 +41,50 @@ func AddToData(dataHash string, data string) {
 }
 
 func AddToIndex(source string, result string, raw string) {
-	db, _ := leveldb.OpenFile("../.history/index", nil)
-	rotation := result
-	indexResult, inDb := db.Get([]byte(source), nil)
-	if inDb == nil {
-		result += string(indexResult)
-	}
-	db.Put([]byte(source), []byte(result), nil)
-	db.Put([]byte(rotation), []byte(raw), nil)
+	rotationFile, _ := os.Create("../.history/index/" + result + ".txt")
+	sourceFile, err := os.OpenFile("../.history/index/"+source+".txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
-	AddRaw(result, raw, db)
-	defer db.Close()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer sourceFile.Close()
+	defer rotationFile.Close()
+
+	_, err2 := rotationFile.WriteString(raw)
+	_, _ = sourceFile.WriteString(result + "\n")
+
+	if err2 != nil {
+		log.Fatal(err2)
+	}
 }
 
 func AddRaw(rotation string, rawstring string, db *leveldb.DB) {
 }
 
-func DBGetIndex(key string) (string, bool) {
+func DBGetIndex(key string) ([]string, bool) {
 	inDb := true
-	db, _ := leveldb.OpenFile("../.history/index", nil)
-	res, _ := db.Get([]byte(key), nil)
-	// if ok != nil {
-	// 	inDb = false
-	// }
+	sourceFile, err := os.Open("../.history/index/" + key + ".txt")
 
-	defer db.Close()
-	return string(res), inDb
+	var words []string
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Scanner := bufio.NewScanner(sourceFile)
+	Scanner.Split(bufio.ScanWords)
+
+	for Scanner.Scan() {
+		words = append(words, Scanner.Text())
+	}
+	if err := Scanner.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	defer sourceFile.Close()
+
+	return words, inDb
 }
 
 func DBGetData(dataHash string) string {

@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
+	"os"
 	"path"
 	"strings"
 )
@@ -15,6 +17,11 @@ type MineResult struct {
 	Rotation  string `json:"rotation"`
 	Nonce     string `json:"nonce"`
 	Timestamp int64  `json:"timestamp"`
+	Weight    int64  `json:"weight"`
+}
+
+type RotationList struct {
+	Rotations []string `json:"rotations"`
 }
 
 //Mining function to handle mine endpoint.
@@ -36,10 +43,13 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 
 //Return index data to client
 func GetIndex(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var rotations RotationList
 	source := path.Base(r.URL.Path)
 	res, _ := DBGetIndex(source)
-	w.Write([]byte(res))
-
+	rotations.Rotations = res
+	json.NewEncoder(w).Encode(rotations)
+	// w.Write([]byte(res))
 }
 
 //Mine a rotation to unlock data given the datahash.
@@ -82,16 +92,42 @@ func GetData(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetRaw(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	rotation := path.Base(r.URL.Path)
 	fmt.Printf("Recieved request for raw meta.\n")
 	result, _ := DBGetIndex(rotation)
-	w.Write([]byte(result))
+	meta := map[string]interface{}{
+		rotation: strings.Join(result, ""),
+	}
+	json.NewEncoder(w).Encode(meta)
+	// w.Write([]byte(result))
+}
+
+func GetJson(w http.ResponseWriter, r *http.Request) {
+
 }
 
 //Trie lookup using a target then return rotations associated with the target.
 func TriePrefixLookup(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var rotations RotationList
 	target := path.Base(r.URL.Path)
 	result, _ := test.searchTrie(target)
-	fmt.Println(result)
-	w.Write([]byte(strings.Join(result, "\n")))
+	rotations.Rotations = result
+	json.NewEncoder(w).Encode(rotations)
+}
+
+func PostBinary(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "application/octet-stream")
+	d, err := ioutil.ReadAll(request.Body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	tmpfile, _ := os.Create("./" + "photo.png")
+	defer tmpfile.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	tmpfile.Write(d)
+	w.WriteHeader(200)
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"golangnode/imgui"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -12,15 +13,16 @@ var test *Trie
 //Setup routes and handlers then serve on port 8080.
 func main() {
 	//Init Imgui.
-	// util.InitImgui()
+	imgui.InitImgui()
 	// SetupRoutes()
 	//Init and test Trie.
-	test = initializeTrie()
-	test.insertToTrie("21e8", "21e893411ac5c7f3896fe57fb7d8a8f150ee18a7256fe73990a17c47a498c8b5")
-	test.insertToTrie("21e8", "21eb2f005c551eca25903ab09dbd08f512d9cbb6af226152690583cbcac51135")
-	test.insertToTrie("21e8", "21eabf80faebc12002aec48f82ba433758130924fde0c0b03dace7b0c9c42f09")
+	AddToTrie()
+	// test = initializeTrie()
+	// test.insertToTrie("21e8", "21e893411ac5c7f3896fe57fb7d8a8f150ee18a7256fe73990a17c47a498c8b5")
+	// test.insertToTrie("21e8", "21eb2f005c551eca25903ab09dbd08f512d9cbb6af226152690583cbcac51135")
+	// test.insertToTrie("21e8", "21eabf80faebc12002aec48f82ba433758130924fde0c0b03dace7b0c9c42f09")
 
-	test.insertToTrie("21e", "21e813411aa5c7f3896fe57fb7d8a8f150ee18a7256fe73990a17c47a498c8b5")
+	// test.insertToTrie("21e", "21e813411aa5c7f3896fe57fb7d8a8f150ee18a7256fe73990a17c47a498c8b5")
 	//End Test.
 
 	// InitSocket()
@@ -32,6 +34,8 @@ func main() {
 	r.HandleFunc("/api/v2/index/{sourceHash}", GetIndex).Methods("GET")
 	r.HandleFunc("/api/v2/trie/{target}", TriePrefixLookup).Methods("GET")
 	r.HandleFunc("/api/v2/raw/{rotation}", GetRaw).Methods("GET")
+	r.HandleFunc("/api/v2/json/{rotation}", GetRaw).Methods("GET")
+	r.HandleFunc("/binary", PostBinary).Methods("POST")
 	// http.HandleFunc("/", wsEndpoint)
 
 	fmt.Println("Running node on port 3222.")
