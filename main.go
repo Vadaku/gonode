@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"golangnode/imgui"
+	"image/color"
 	"net/http"
 
+	g "github.com/AllenDang/giu"
 	"github.com/gorilla/mux"
 )
 
@@ -13,7 +14,10 @@ var test *Trie
 //Setup routes and handlers then serve on port 8080.
 func main() {
 	//Init Imgui.
-	imgui.InitImgui()
+	wnd := g.NewMasterWindow("Go Node Interface", 1200, 800, 0)
+	wnd.SetBgColor(color.RGBA{0, 0, 0, 0})
+	wnd.Run(loop)
+	// imgui.InitImgui()
 	// SetupRoutes()
 	//Init and test Trie.
 	AddToTrie()
