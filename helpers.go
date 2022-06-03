@@ -12,7 +12,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func Mine(source string, data string, target string, conn *websocket.Conn) *MineResult {
+func Mine(source string, data string, target string, conn *websocket.Conn) (*MineResult, string) {
 	var beforeHashData string
 	//Assign request queries and random nonce to relevant variables.
 	rand.Seed(time.Now().UnixNano())
@@ -41,9 +41,6 @@ func Mine(source string, data string, target string, conn *websocket.Conn) *Mine
 		rotationChecksum = sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
 		rotationHash = hex.EncodeToString(rotationChecksum[:])
 		fmt.Println(rotationHash)
-		if conn != nil {
-			conn.WriteMessage(websocket.TextMessage, []byte(rotationHash))
-		}
 	}
 
 	timestamp := time.Now().Unix()
@@ -68,7 +65,7 @@ func Mine(source string, data string, target string, conn *websocket.Conn) *Mine
 	AddToData(data, beforeHashData)
 	AddToIndex(source, rotationHash, rawString)
 
-	return res
+	return res, rawString
 }
 
 func BinaryData() {

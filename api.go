@@ -36,7 +36,8 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing a required parameter.\nPlease ensure request includes source, data and target.", http.StatusBadRequest)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(Mine(source, data, target, nil))
+		jsonResult, _ := Mine(source, data, target, nil)
+		json.NewEncoder(w).Encode(jsonResult)
 	}
 
 }
