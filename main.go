@@ -1,11 +1,5 @@
 package main
 
-/*
-void getGPU();
-#cgo LDFLAGS: -L. -L./ -lgetgpu
-*/
-import "C"
-
 import (
 	"fmt"
 	"image/color"
@@ -19,11 +13,16 @@ var test *Trie
 
 //Setup routes and handlers then serve on port 8080.
 func main() {
-	C.getGPU()
-	//Init Imgui.
-	wnd := g.NewMasterWindow("Go Node Interface", 1200, 800, 0)
-	wnd.SetBgColor(color.RGBA{0, 0, 0, 0})
-	wnd.Run(loop)
+	// C.getGPU()
+	//Init and run Imgui using a go routine.
+	go func() {
+		wnd := g.NewMasterWindow("Go Node", 1200, 800, 0)
+		wnd.Run(func() {
+			wnd.SetBgColor(color.Black)
+			w, h := wnd.GetSize()
+			loop(float32(w), float32(h))
+		})
+	}()
 	// imgui.InitImgui()
 	// SetupRoutes()
 	//Init and test Trie.
