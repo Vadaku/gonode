@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"path"
 	"strings"
 )
@@ -25,7 +23,7 @@ type RotationList struct {
 }
 
 //Mining function to handle mine endpoint.
-//Processes clients mine request then returns mine result as response.
+//Accepts JSON or Binary requests and returns mine result as a response.
 func MineReq(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Recieved mine request from", r.RemoteAddr)
 	r.ParseForm()
@@ -34,15 +32,18 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 	target := r.FormValue("target")
 	if source == "" || data == "" || target == "" {
 		http.Error(w, "Missing a required parameter.\nPlease ensure request includes source, data and target.", http.StatusBadRequest)
-	} else {
+	} else if r.Header.Get("Content-Type") == "application/json" {
 		w.Header().Set("Content-Type", "application/json")
 		jsonResult, _ := Mine(source, data, target, nil)
 		json.NewEncoder(w).Encode(jsonResult)
+	} else if r.Header.Get("Content-Type") == "application/octet-stream" {
+
 	}
 
 }
 
-//Return index data to client
+//Endpoint function to process clients index request.
+//Accepts source hash and returns list of rotations related to that source.
 func GetIndex(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	var rotations RotationList
@@ -50,7 +51,6 @@ func GetIndex(w http.ResponseWriter, r *http.Request) {
 	res, _ := DBGetIndex(source)
 	rotations.Rotations = res
 	json.NewEncoder(w).Encode(rotations)
-	// w.Write([]byte(res))
 }
 
 //Mine a rotation to unlock data given the datahash.
@@ -74,7 +74,8 @@ func Hashwall(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-//Return data to the client
+//Endpoint function to process client data requests.
+//Accepts datahash and returns corresponding data.
 func GetData(w http.ResponseWriter, r *http.Request) {
 	dataHash := path.Base(r.URL.Path)
 	fmt.Printf("Recieved data request for %s\n", dataHash)
@@ -116,19 +117,4 @@ func TriePrefixLookup(w http.ResponseWriter, r *http.Request) {
 	result, _ := test.searchTrie(target)
 	rotations.Rotations = result
 	json.NewEncoder(w).Encode(rotations)
-}
-
-func PostBinary(w http.ResponseWriter, request *http.Request) {
-	w.Header().Set("Content-Type", "application/octet-stream")
-	d, err := ioutil.ReadAll(request.Body)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	tmpfile, _ := os.Create("./" + "photo.png")
-	defer tmpfile.Close()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-	}
-	tmpfile.Write(d)
-	w.WriteHeader(200)
 }

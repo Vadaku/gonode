@@ -4,8 +4,11 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
+	"net/http"
+	"os"
 	"strconv"
 	"time"
 
@@ -58,14 +61,29 @@ func Mine(source string, data string, target string, conn *websocket.Conn) (*Min
 	weight := strconv.FormatInt(int64(math.Pow(16, float64(len(target)))), 10)
 	//Hardcoded 'user' hash.
 	myNameHash := "00e51906df651a7ee922446590f487cff433ec9816aedc44dc49952a05cd16df"
-	rawString := strconv.FormatInt(timestamp, 10) + weight + source + data + target + myNameHash + strconv.Itoa(nonce)
+	rawString := fmt.Sprintf("%020s", strconv.FormatInt(timestamp, 10)) + fmt.Sprintf("%020s", weight) + source + data + fmt.Sprintf("%032s", target) + myNameHash + fmt.Sprintf("%020s", strconv.Itoa(nonce))
 
-	//Add data to leveldb.
-
+	//Add data to storage.
 	AddToData(data, beforeHashData)
 	AddToIndex(source, rotationHash, rawString)
 
 	return res, rawString
+}
+
+func PostBinary(w http.ResponseWriter, request *http.Request) {
+	w.Header().Set("Content-Type", "application/octet-stream")
+	d, err := ioutil.ReadAll(request.Body)
+	fmt.Println(request.ParseForm())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	tmpfile, _ := os.Create("./" + "photo.png")
+	defer tmpfile.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	tmpfile.Write(d)
+	w.WriteHeader(200)
 }
 
 func BinaryData() {
