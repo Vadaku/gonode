@@ -7,7 +7,7 @@
 
 extern "C" {
 
-    char * getGPU(char* stringy) {
+    char* getGPU(char* stringy) {
         JOB ** jobs;
         unsigned long temp;
         char * a_file = 0;
@@ -32,7 +32,7 @@ extern "C" {
 
         return out;
 
-        cudaDeviceReset();
+        // cudaDeviceReset();
         // int nDevices;
         // cudaGetDeviceCount(&nDevices);
         // for (int i = 0; i < nDevices; i++) {
