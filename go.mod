@@ -7,7 +7,7 @@ require (
 	github.com/syndtr/goleveldb v1.0.0
 )
 
-require github.com/joho/godotenv v1.4.0 // indirect
+require github.com/joho/godotenv v1.4.0
 
 require (
 	github.com/AllenDang/giu v0.6.2
@@ -24,8 +24,8 @@ require (
 	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20220516021902-eb3e265c7661 // indirect
 	github.com/pkg/browser v0.0.0-20210911075715-681adbf594b8 // indirect
 	github.com/sahilm/fuzzy v0.1.0 // indirect
-	golang.org/x/image v0.0.0-20220413100746-70e8d0d3baa9 // indirect
-	golang.org/x/sys v0.0.0-20220520151302-bc2c85ada10a // indirect
+	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
+	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 	gopkg.in/eapache/queue.v1 v1.1.0 // indirect
-	gopkg.in/yaml.v2 v2.2.4 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 )
