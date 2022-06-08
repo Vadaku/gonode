@@ -12,6 +12,8 @@
 #include <dirent.h>
 #include <ctype.h>
 
+extern "C" void sha256_block_data_order (uint32_t *ctx, const void *in, size_t num);
+
 char * trim(char *str){
     size_t len = 0;
     char *frontp = str;
@@ -52,15 +54,72 @@ char * trim(char *str){
     return str;
 }
 
-__global__ void sha256_cuda(JOB ** jobs, int n) {
+__global__ void sha256_hash(JOB ** jobs, int n) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;
 	// perform sha256 calculation here
 	if (i < n){
 		SHA256_CTX ctx;
 		sha256_init(&ctx);
-		sha256_update(&ctx, jobs[i]->data, jobs[i]->size);
-		sha256_final(&ctx, jobs[i]->digest);
+		sha256_update(&ctx, jobs[i]->data, jobs[i]->size, i* jobs[i]->size);
+		sha256_final(&ctx, jobs[i]->digest, i * 32);
 	}
+}
+
+__global__ void sha256_cuda(BYTE * data, BYTE * digest, int n, int messageSize, BYTE * target,
+        int targetHexCharCount, int targetLength, int * position, BYTE * d_data_init,
+        uint64_t nonce, bool * found, uint64_t * nonces) {
+    int i = blockIdx.x * blockDim.x + threadIdx.x;
+    // perform sha256 calculation here
+    if (i < n) {
+        SHA256_CTX ctx;
+        while (*found == false) {
+            int buffer = i * messageSize;
+            uint64_t tmp = nonce + i;
+
+            // initialize nonce
+            #pragma unroll
+            for (int j = 1; j <= 20; j++) {
+                data[buffer + messageSize - j] = (tmp % 10) + '0';
+                tmp /= 10;
+            }
+
+            // initialize message data
+            for (int j = 0; j < messageSize - 20; j++) {
+                data[j + buffer] = d_data_init[j];
+            }
+
+            // hash data
+            sha256_init(&ctx);
+            sha256_update(&ctx, data, messageSize, i * messageSize);
+            sha256_final(&ctx, digest, i * 32);
+
+            position[i] = 1;
+
+            // Check that the hash that is generated hash a valid target
+            for (int j = 0; j < targetHexCharCount; j++) {
+                unsigned int value = (unsigned int) digest[(i * 32) + j];
+                // Check used if targetlength is an odd integer value
+                if (targetLength % 2 != 0 && j == targetHexCharCount - 1) {
+                    // Bitwise operation to check first value in hex val
+                    if (value >> 4 != target[j]) {
+                        position[i] = 0;
+                        break;
+                    }
+                } else if (value != target[j]) {
+                    // Check if hex values are not equal
+                    position[i] = 0;
+                    break;
+                }
+            }
+
+            if (position[i] == 1) {
+                nonces[i] = nonce + i;
+                *found = true;
+                return;
+            }
+            nonce += n;
+        }
+    }
 }
 
 void pre_sha256() {
@@ -74,7 +133,7 @@ extern "C" {
 void runJobs(JOB ** jobs, int n){
 	int blockSize = 4;
 	int numBlocks = (n + blockSize - 1) / blockSize;
-	sha256_cuda <<< numBlocks, blockSize >>> (jobs, n);
+	sha256_hash <<< numBlocks, blockSize >>> (jobs, n);
 }
 
 }
@@ -121,6 +180,17 @@ BYTE * get_file_data(char * fname, unsigned long * size) {
 	fclose(f);
 	*size = fsize;
 	return buffer;
+}
+
+BYTE * get_data(char* name, unsigned long * size){
+	BYTE* buffer = 0;
+	unsigned long ssize = 0;
+	ssize = strlen(name);
+	checkCudaErrors(cudaMallocManaged(&buffer, (ssize+1)*sizeof(char)));
+	memcpy(buffer, name, ssize+1);
+	*size = ssize;
+	return buffer;
+
 }
 
 void print_usage(){

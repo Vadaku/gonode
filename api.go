@@ -36,8 +36,8 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		jsonResult, _ := Mine(source, data, target, nil)
 		json.NewEncoder(w).Encode(jsonResult)
-	} else if r.Header.Get("Content-Type") == "application/octet-stream" {
-
+	} else if r.Header.Get("Content-Type") == "multipart/form-data" {
+		PostBinary(w, r)
 	}
 
 }

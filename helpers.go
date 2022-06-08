@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -71,13 +72,17 @@ func Mine(source string, data string, target string, conn *websocket.Conn) (*Min
 }
 
 func PostBinary(w http.ResponseWriter, request *http.Request) {
-	w.Header().Set("Content-Type", "application/octet-stream")
-	d, err := ioutil.ReadAll(request.Body)
-	fmt.Println(request.ParseForm())
+	source := request.FormValue("source")
+	file, header, _ := request.FormFile("data")
+	target := request.FormValue("target")
+	dataChecksum := sha256.Sum256([]byte(header.Filename))
+	dataFileHash := hex.EncodeToString(dataChecksum[:])
+	Mine(source, data, target, nil)
+	d, err := ioutil.ReadAll(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
-	tmpfile, _ := os.Create("./" + "photo.png")
+	tmpfile, _ := os.Create("../.history/data/" + dataFileHash + header.Filename[strings.LastIndex(header.Filename, "."):])
 	defer tmpfile.Close()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

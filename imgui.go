@@ -62,9 +62,8 @@ func loop(w float32, h float32) {
 						rowsData...,
 					).Size(g.Auto, g.Auto),
 			),
-			g.TabItem("Refresh"),
 			g.TabItem("Raw"),
-			g.TabItem("TreeTable").Layout(
+			g.TabItem("Tree").Layout(
 				g.TreeTable().
 					Columns(g.TableColumn("Name"), g.TableColumn("Size")).
 					Rows(
@@ -97,7 +96,6 @@ func showMinePanel(w float32, h float32) {
 	mineWindow := g.Window("Mine").Flags(flags).Pos(w-500, h/2).Size(w-(w-500), h-(h/2))
 	mineWindow.Layout(
 		leftLabel("Source", &source),
-		// g.InputText(&source).Label("Source").Size(50),
 		leftLabel("Data    ", &data),
 		leftLabel("Target ", &target),
 		g.Align(g.AlignCenter).To(
@@ -153,8 +151,13 @@ func populateTable() {
 		contents, _ := ioutil.ReadFile("../.history/index/" + v.Name())
 		if !strings.Contains(string(contents), "\n") {
 			target := strings.Trim(string(contents)[168:200], "0")
-			rowsData = append(rowsData, g.TableRow(g.Label(string(contents)[40:104]), g.Label(string(contents)[104:168]),
-				g.Label(target), g.Label(v.Name()), g.Label(string(contents)[265:])))
+			rowsData = append(rowsData, g.TableRow(
+				g.Label(string(contents)[40:104]),
+				g.Label(string(contents)[104:168]),
+				g.Label(target),
+				g.Label(v.Name()),
+				g.Label(string(contents)[265:])),
+			)
 		}
 	}
 }

@@ -4,16 +4,24 @@ package main
 #include <stdio.h>
 #include <stdlib.h>
 
+char* getGPU(char* s);
+#cgo LDFLAGS: -L. -L./ -lgetgpu
+
 void myprint(char* s) {
 	printf("%s\n", s);
 }
 */
 import "C"
 
-import "unsafe"
+import (
+	"fmt"
+	"unsafe"
+)
 
 func Example() {
-	cs := C.CString("Hello from stdio\n")
-	C.myprint(cs)
-	C.free(unsafe.Pointer(cs))
+	pcontent := C.CString("test")
+	testhash := C.getGPU(pcontent)
+	C.free(unsafe.Pointer(pcontent))
+
+	fmt.Printf("%s\n", C.GoString(testhash))
 }

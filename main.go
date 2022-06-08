@@ -13,6 +13,7 @@ var test *Trie
 
 //Setup routes and handlers then serve on port 8080.
 func main() {
+	Example()
 	// C.getGPU()
 	//Init and run Imgui using a go routine.
 	go func() {
