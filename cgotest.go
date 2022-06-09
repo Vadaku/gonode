@@ -5,7 +5,7 @@ package main
 #include <stdlib.h>
 
 char* getGPU(char* s);
-#cgo LDFLAGS: -L. -L./ -lgetgpu
+#cgo LDFLAGS: -L./lib -lgetgpu -Wl,-rpath=./lib
 
 void myprint(char* s) {
 	printf("%s\n", s);
