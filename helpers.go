@@ -44,7 +44,7 @@ func Mine(source string, data string, target string, conn *websocket.Conn) (*Min
 		nonce++
 		rotationChecksum = sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
 		rotationHash = hex.EncodeToString(rotationChecksum[:])
-		fmt.Println(rotationHash)
+		// fmt.Println(rotationHash)
 	}
 
 	timestamp := time.Now().Unix()

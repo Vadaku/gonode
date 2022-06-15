@@ -16,6 +16,8 @@ void hello(char* msg);
 import "C"
 
 import (
+	"fmt"
+	"time"
 	"unsafe"
 )
 
@@ -28,16 +30,20 @@ func CudaHash(toHash string) string {
 	return C.GoString(testhash)
 }
 
-func HelloCpp() {
-	source := C.CString("hello")
-	target := C.CString("21e8")
-	data := C.CString("data")
+func HelloCpp(source string, data string, target string) {
+	source1 := C.CString(source)
+	target1 := C.CString(target)
+	data1 := C.CString(data)
 	user := C.CString("anon")
 
-	C.cudaMine(source, target, 0, data, user, 1000, 5000)
-	C.free(unsafe.Pointer(source))
-	C.free(unsafe.Pointer(target))
-	C.free(unsafe.Pointer(data))
+	start := time.Now()
+	C.cudaMine(source1, target1, 0, data1, user, 1000, 5000)
+	elapsed := time.Since(start)
+	fmt.Printf("\033[32mTime taken %s\033[0m\n", elapsed)
+
+	C.free(unsafe.Pointer(source1))
+	C.free(unsafe.Pointer(target1))
+	C.free(unsafe.Pointer(data1))
 	C.free(unsafe.Pointer(user))
 
 }
