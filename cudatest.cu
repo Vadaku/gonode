@@ -87,7 +87,6 @@ extern "C" {
         src = cudaHash(s);
     }
     std::string message = src + datahash + target + user + std::to_string(timestamp);
-    std::cout << message << + "\n";
     int messageSize = message.length() + nonceSize;
     int dataSize = sizeof(BYTE) * numMessages * messageSize;
 
