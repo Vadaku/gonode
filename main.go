@@ -4,6 +4,8 @@ var test *Trie
 
 //Setup routes and handlers then serve on port 8080.
 func main() {
+	AddToTrie()
+
 	Execute()
 	// C.getGPU()
 	//Init and run Imgui using a go routine.
@@ -12,8 +14,6 @@ func main() {
 	// SetupRoutes()
 	//Init and test Trie.
 	// start := time.Now()
-
-	AddToTrie()
 
 	// fmt.Printf("\033[32mTime Taken: %s\033[0m\n", time.Since(start))
 
