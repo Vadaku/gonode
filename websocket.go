@@ -20,7 +20,7 @@ func reader(conn *websocket.Conn) {
 			return
 		}
 		log.Println(string(p))
-		Mine("test", "testdata", "21e8", conn)
+		Mine("test", "testdata", "21e8", 0, true)
 		if err := conn.WriteMessage(messageType, []byte("W")); err != nil {
 			log.Println(err)
 			return

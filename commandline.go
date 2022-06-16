@@ -72,7 +72,7 @@ var (
 		Long:  `21e8 Miner/Node coded in Golang.`,
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			Mine(args[0], args[1], args[2], nil)
+			Mine(args[0], args[1], args[2], 0, true)
 		},
 	}
 	cpu = &cobra.Command{
@@ -81,7 +81,7 @@ var (
 		Long:  `21e8 Miner/Node coded in Golang.`,
 		// Args:  cobra.MinimumNArgs(3),
 		Run: func(cmd *cobra.Command, args []string) {
-			Mine(args[0], args[1], args[2], nil)
+			Mine(args[0], args[1], args[2], 0, true)
 		},
 	}
 	gpu = &cobra.Command{

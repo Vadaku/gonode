@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"image/color"
 	"io/ioutil"
+	"log"
 	"os"
+	"os/exec"
+	"strconv"
 	"strings"
 
 	g "github.com/AllenDang/giu"
@@ -12,17 +15,16 @@ import (
 )
 
 var (
-	showMine   bool
-	showIndex  bool
-	showData   bool
-	source     string
-	data       string
-	target     string
-	raw        string
-	mineRes    string
-	rowsData   []*g.TableRowWidget
-	mainWindow *g.WindowWidget
-	mineLogs   []*g.TableRowWidget
+	source           string
+	data             string
+	target           string
+	mineRes          *MineResult
+	correctRes       *MineResult
+	rowsData         []*g.TableRowWidget
+	mainWindow       *g.WindowWidget
+	codeEditorWindow *g.WindowWidget
+	mineLogs         []*g.TableRowWidget
+	editor           g.CodeEditorWidget
 )
 
 var onload = true
@@ -30,6 +32,17 @@ var onload = true
 func loop(w float32, h float32) {
 	if onload {
 		populateTable()
+		editor.ShowWhitespaces(false).Text(`/**
+	Source and data parameters are sha256 hashes.
+	Target is a valid target.
+**/
+func mineFunction(source string, data string, target string, nonce int) string {
+	rotationHash := source + data + strconv.Itoa(nonce)
+	_ = rotationHash
+	//Complete code below...
+
+	return ""
+}`)
 		onload = false
 	}
 	g.PushStyleColor(g.StyleColorWindowBg, color.RGBA{R: 0, G: 0, B: 0, A: 0})
@@ -89,7 +102,7 @@ func loop(w float32, h float32) {
 }
 
 func showMinePanel(w float32, h float32) {
-	res := &MineResult{}
+	// res := &MineResult{}
 	flags := g.WindowFlagsNoResize | g.WindowFlagsNoMove | g.WindowFlagsAlwaysAutoResize | g.WindowFlagsNoCollapse
 	g.PushStyleColor(g.StyleColorWindowBg, color.RGBA{R: 0, G: 0, B: 0, A: 0})
 	g.PushStyleColor(g.StyleColorBorder, color.RGBA{R: 0, G: 255, B: 255, A: 255})
@@ -102,11 +115,11 @@ func showMinePanel(w float32, h float32) {
 			g.Row(
 				g.Button("Upload"),
 				g.Button("Mine").OnClick(func() {
-					res, raw = Mine(source, data, target, nil)
-					mineLogs = append(mineLogs, g.TableRow(g.Label(res.Rotation)))
+					mineRes, _ = Mine(source, data, target, 0, true)
+					// logString := res.Rotation
+					mineLogs = append(mineLogs, g.TableRow(g.Label(mineRes.Rotation)))
 					rowsData = nil
 					populateTable()
-					mineRes = res.Rotation
 				}),
 			)),
 		g.Separator(),
@@ -153,10 +166,14 @@ func populateTable() {
 			target := strings.Trim(string(contents)[168:200], "0")
 			rowsData = append(rowsData, g.TableRow(
 				g.Label(string(contents)[40:104]),
-				g.Label(string(contents)[104:168]),
+				g.Custom(func() {
+					g.Selectable(string(contents)[104:168]).OnClick(func() {
+						unlockData(string(contents)[40:104], string(contents)[104:168], target, string(contents)[265:])
+					}).Build()
+				}),
 				g.Label(target),
 				g.Label(v.Name()),
-				g.Label(string(contents)[265:])),
+				g.Label(string(contents)[265:])).MinHeight(22),
 			)
 		}
 	}
@@ -166,8 +183,47 @@ func showDataPanel(w float32, h float32) {
 	flags := g.WindowFlagsNoResize | g.WindowFlagsNoMove | g.WindowFlagsAlwaysAutoResize | g.WindowFlagsNoCollapse
 	g.PushStyleColor(g.StyleColorWindowBg, color.RGBA{R: 0, G: 0, B: 0, A: 0})
 	g.PushStyleColor(g.StyleColorBorder, color.RGBA{R: 0, G: 255, B: 255, A: 255})
-	g.Window("Index").Flags(flags).Pos(0, h/2).Size(w-500, h/2).Layout(
-		g.Table(),
+	codeEditorWindow = g.Window("Hashwall").Flags(flags).Pos(0, h/2).Size(w-500, h/2)
+	codeEditorWindow.Layout(
+		g.Custom(func() {
+			imgui.SetScrollHereY(0.5)
+		}),
+		g.Label("Finish this mine function and successfully mine the correct rotation to unlock hashed data\n\n"),
+		editor.HandleKeyboardInputs(true).Border(true).Size(w-600, (h-500)),
 	)
+	codeEditorWindow.Layout(g.Button("Test Code").OnClick(
+		func() {
+			executeCode()
+		},
+	))
 	g.PopStyleColorV(2)
+}
+
+//Execute editor window code.
+func executeCode() {
+	codeEditorText := []byte(`package main
+	import (
+		_"crypto/sha256"
+		_"encoding/hex"
+		"strconv"
+	)` +
+		editor.GetText())
+
+	if err := ioutil.WriteFile("mineFunc.go", codeEditorText, 0644); err != nil {
+		log.Fatal("Couldn't write to temp file", err)
+	}
+
+	cmd := exec.Command("bash", "-c", "go test -run MineFunction")
+
+	output, _ := cmd.Output()
+	fmt.Println(string(output))
+
+	cmd.Wait()
+}
+
+func unlockData(source string, datahash string, target string, nonce string) {
+	correctRes = &MineResult{}
+	intNonce, _ := strconv.Atoi(nonce)
+	correctRes, _ = Mine(source, data, target, intNonce, false)
+	fmt.Println(source, datahash, target, nonce)
 }

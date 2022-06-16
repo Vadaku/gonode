@@ -12,15 +12,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gorilla/websocket"
 )
 
-func Mine(source string, data string, target string, conn *websocket.Conn) (*MineResult, string) {
+func Mine(source string, data string, target string, nonce int, saveResult bool) (*MineResult, string) {
 	var beforeHashData string
 	//Assign request queries and random nonce to relevant variables.
-	rand.Seed(time.Now().UnixNano())
-	nonce := rand.Int()
+	if nonce == 0 {
+		rand.Seed(time.Now().UnixNano())
+		nonce = rand.Int()
+	}
+
 	//Hash the source if it hasn't been hashed already.
 	if len(source) != 64 {
 		sourceChecksum := sha256.Sum256([]byte(source))
@@ -44,7 +45,7 @@ func Mine(source string, data string, target string, conn *websocket.Conn) (*Min
 		nonce++
 		rotationChecksum = sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
 		rotationHash = hex.EncodeToString(rotationChecksum[:])
-		// fmt.Println(rotationHash)
+		fmt.Println(rotationHash)
 	}
 
 	timestamp := time.Now().Unix()
@@ -65,8 +66,10 @@ func Mine(source string, data string, target string, conn *websocket.Conn) (*Min
 	rawString := fmt.Sprintf("%020s", strconv.FormatInt(timestamp, 10)) + fmt.Sprintf("%020s", weight) + source + data + fmt.Sprintf("%032s", target) + myNameHash + fmt.Sprintf("%020s", strconv.Itoa(nonce))
 
 	//Add data to storage.
-	AddToData(data, beforeHashData)
-	AddToIndex(source, rotationHash, rawString)
+	if saveResult {
+		AddToData(data, beforeHashData)
+		AddToIndex(source, rotationHash, rawString)
+	}
 
 	return res, rawString
 }
@@ -77,7 +80,7 @@ func PostBinary(w http.ResponseWriter, request *http.Request) {
 	target := request.FormValue("target")
 	dataChecksum := sha256.Sum256([]byte(header.Filename))
 	dataFileHash := hex.EncodeToString(dataChecksum[:])
-	Mine(source, data, target, nil)
+	Mine(source, data, target, 0, true)
 	d, err := ioutil.ReadAll(file)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

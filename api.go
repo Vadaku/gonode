@@ -34,13 +34,13 @@ func MineReq(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing a required parameter.\nPlease ensure request includes source, data and target.", http.StatusBadRequest)
 	} else if r.Header.Get("Content-Type") == "application/json" {
 		w.Header().Set("Content-Type", "application/json")
-		jsonResult, _ := Mine(source, data, target, nil)
+		jsonResult, _ := Mine(source, data, target, 0, true)
 		json.NewEncoder(w).Encode(jsonResult)
 	} else if r.Header.Get("Content-Type") == "multipart/form-data" {
 		PostBinary(w, r)
 	} else {
 		w.Header().Set("Content-Type", "application/json")
-		jsonResult, _ := Mine(source, data, target, nil)
+		jsonResult, _ := Mine(source, data, target, 0, true)
 		json.NewEncoder(w).Encode(jsonResult)
 	}
 
@@ -71,7 +71,7 @@ func Hashwall(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 			} else {
-				Mine(reqBody.Source, reqBody.Datahash, reqBody.Target, nil)
+				Mine(reqBody.Source, reqBody.Datahash, reqBody.Target, 0, true)
 				http.Redirect(w, r, "/api/v2/data/"+reqBody.Datahash, http.StatusMovedPermanently)
 			}
 		}
