@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -40,8 +41,8 @@ func AddToData(dataHash string, data string) {
 	defer db.Close()
 }
 
-func AddToIndex(source string, result string, raw string) {
-	rotationFile, _ := os.Create("../.history/index/" + result + ".txt")
+func AddToIndex(source string, result string, raw string, jsonRes MineResult) {
+	rotationFile, _ := os.Create("../.history/index/" + result + ".json")
 	sourceFile, err := os.OpenFile("../.history/index/"+source+".txt", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 
 	if err != nil {
@@ -51,8 +52,11 @@ func AddToIndex(source string, result string, raw string) {
 	defer sourceFile.Close()
 	defer rotationFile.Close()
 
-	_, err2 := rotationFile.WriteString(raw)
-	_, _ = sourceFile.WriteString(result + "\n")
+	con, _ := json.Marshal(jsonRes)
+	_, err2 := rotationFile.Write(con)
+	if len(jsonRes.Datahash) == 64 {
+		_, _ = sourceFile.WriteString(result + "\n")
+	}
 
 	if err2 != nil {
 		log.Fatal(err2)
@@ -69,7 +73,7 @@ func DBGetIndex(key string) ([]string, bool) {
 	var words []string
 
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(fmt.Errorf("%s not in index", key))
 	}
 
 	Scanner := bufio.NewScanner(sourceFile)
@@ -79,7 +83,7 @@ func DBGetIndex(key string) ([]string, bool) {
 		words = append(words, Scanner.Text())
 	}
 	if err := Scanner.Err(); err != nil {
-		log.Fatal(err)
+		fmt.Println(fmt.Errorf("%s not in index", key))
 	}
 
 	defer sourceFile.Close()

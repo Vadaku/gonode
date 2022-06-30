@@ -11,7 +11,7 @@ require github.com/joho/godotenv v1.4.0
 
 require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
-	github.com/spf13/cobra v1.4.0 // indirect
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/pflag v1.0.5 // indirect
 )
 
@@ -33,5 +33,4 @@ require (
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
 	golang.org/x/sys v0.0.0-20220608164250-635b8c9b7f68 // indirect
 	gopkg.in/eapache/queue.v1 v1.1.0 // indirect
-	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

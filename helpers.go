@@ -16,6 +16,7 @@ import (
 
 func Mine(source string, data string, target string, nonce int, saveResult bool) (*MineResult, string) {
 	var beforeHashData string
+	var res *MineResult
 	//Assign request queries and random nonce to relevant variables.
 	if nonce == 0 {
 		rand.Seed(time.Now().UnixNano())
@@ -39,27 +40,20 @@ func Mine(source string, data string, target string, nonce int, saveResult bool)
 	//Continually mine to see if the rotationHash prefix matches the target.
 	for {
 		if rotationHash[0:len(target)] == target {
-			fmt.Printf("\033[32mTarget matched with rotation %s and nonce %s\033[0m\n", rotationHash, strconv.Itoa(nonce))
+			if saveResult {
+				fmt.Printf("\033[32mTarget matched with rotation %s and nonce %s\033[0m\n", rotationHash, strconv.Itoa(nonce))
+			}
 			break
 		}
 		nonce++
 		rotationChecksum = sha256.Sum256([]byte(source + data + strconv.Itoa(nonce)))
 		rotationHash = hex.EncodeToString(rotationChecksum[:])
-		fmt.Println(rotationHash)
+		// fmt.Println(rotationHash)
 	}
 
 	timestamp := time.Now().Unix()
 	//Format result as MineResult struct.
-	res := &MineResult{
-		Source:    source,
-		Datahash:  data,
-		Target:    target,
-		Rotation:  rotationHash,
-		Nonce:     strconv.Itoa(nonce),
-		Timestamp: timestamp,
-		Weight:    int64(math.Pow(16, float64(len(target)))),
-	}
-	fmt.Println(timestamp)
+
 	weight := strconv.FormatInt(int64(math.Pow(16, float64(len(target)))), 10)
 	//Hardcoded 'user' hash.
 	myNameHash := "00e51906df651a7ee922446590f487cff433ec9816aedc44dc49952a05cd16df"
@@ -67,8 +61,29 @@ func Mine(source string, data string, target string, nonce int, saveResult bool)
 
 	//Add data to storage.
 	if saveResult {
+		res = &MineResult{
+			Source:    source,
+			Datahash:  data,
+			Target:    target,
+			Rotation:  rotationHash,
+			Nonce:     strconv.Itoa(nonce),
+			Timestamp: timestamp,
+			Weight:    int64(math.Pow(16, float64(len(target)))),
+		}
 		AddToData(data, beforeHashData)
-		AddToIndex(source, rotationHash, rawString)
+		AddToIndex(source, rotationHash, rawString, *res)
+	} else {
+		unlockedData := DBGetData(data)
+		res = &MineResult{
+			Source:    source,
+			Datahash:  unlockedData,
+			Target:    target,
+			Rotation:  rotationHash,
+			Nonce:     strconv.Itoa(nonce),
+			Timestamp: timestamp,
+			Weight:    int64(math.Pow(16, float64(len(target)))),
+		}
+
 	}
 
 	return res, rawString

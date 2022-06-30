@@ -33,6 +33,9 @@ var (
 		Long:  `Launch imgui node interface`,
 		// Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			go func() {
+				setupRoutes()
+			}()
 			wnd := g.NewMasterWindow("Go Node", 1200, 800, 0)
 			wnd.Run(func() {
 				wnd.SetBgColor(color.Black)
@@ -94,6 +97,26 @@ var (
 		},
 	}
 )
+
+func setupRoutes() {
+	r := mux.NewRouter()
+	r.HandleFunc("/api/v2/mine", MineReq).Methods("POST")
+	r.HandleFunc("/api/v2/hashwall", Hashwall).Methods("PUT")
+	r.HandleFunc("/api/v2/data/{dataHash}", GetData).Methods("GET")
+	r.HandleFunc("/api/v2/index/{sourceHash}", GetIndex).Methods("GET")
+	r.HandleFunc("/api/v2/trie/{target}", TriePrefixLookup).Methods("GET")
+	r.HandleFunc("/api/v2/raw/{rotation}", GetRaw).Methods("GET")
+	r.HandleFunc("/api/v2/json/{rotation}", GetRaw).Methods("GET")
+	r.HandleFunc("/binary", PostBinary).Methods("POST")
+	port := "3222"
+	fmt.Printf("Running node on port %s\n", "3222")
+	// go func() {
+	// 	http.ListenAndServe(":2180", nil)
+	// 	fmt.Println("WS Server Started on port 2180")
+	// }()
+
+	log.Fatal(http.ListenAndServe(":"+port, r))
+}
 
 func Execute() {
 	// rootCmd.PersistentFlags().BoolVarP(&pFlag, "pFlag", "p", false, "")
